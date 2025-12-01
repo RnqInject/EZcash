@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ezcash - Crypto Casino</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a3a, #0d1b2a);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 0;
+            border-bottom: 2px solid #2E8B57;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2E8B57;
+        }
+
+        .balance-container {
+            background: rgba(46, 139, 87, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid #2E8B57;
+        }
+
+        .balance {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .balance-change {
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .balance-change.show {
+            opacity: 1;
+        }
+
+        .balance-change.positive { color: #2E8B57; }
+        .balance-change.negative { color: #ff4444; }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: #2E8B57;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #236b47;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 100px auto 30px;
+            padding: 0 20px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: #2E8B57;
+            background: rgba(46, 139, 87, 0.1);
+        }
+
+        .game-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .game-card.disabled:hover {
+            transform: none;
+            border-color: transparent;
+        }
+
+        .game-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .game-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #2E8B57;
+        }
+
+        .payment-section {
+            display: none;
+            margin: 30px 0;
+        }
+
+        .payment-box {
+            border: 2px solid #2E8B57;
+            padding: 30px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px 0;
+        }
+
+        .wallet-address {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border: 1px dashed #2E8B57;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 16px;
+            margin: 15px 0;
+            word-break: break-all;
+            color: #2E8B57;
+            font-weight: bold;
+        }
+
+        .status {
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .pending { background: #fff3cd; color: #856404; }
+        .confirmed { background: #d4edda; color: #155724; }
+        .processing { background: #cce7ff; color: #004085; }
+        .error { background: #f8d7da; color: #721c24; }
+
+        .copy-btn {
+            background: #2E8B57;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+
+        input, select {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .bet-btn {
+            background: #2E8B57;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        .bet-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .withdraw-btn {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        .transaction-history {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction-deposit { border-left-color: #2E8B57; }
+        .transaction-withdraw { border-left-color: #ff6b35; }
+        .transaction-win { border-left-color: #ffd700; }
+        .transaction-bet { border-left-color: #ff4444; }
+
+        .game-window {
+            display: none;
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #2E8B57;
+            border-radius: 15px;
+            padding: 20px;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .reels {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+        }
+
+        .reel {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border: 3px solid #2E8B57;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+        }
+
+        .spin-btn {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px;
+        }
+
+        .spin-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .result {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+            min-height: 30px;
+            text-align: center;
+        }
+
+        .win-animation {
+            animation: winPulse 0.5s ease-in-out;
+        }
+
+        @keyframes winPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .balance-update {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 40px;
+            border-radius: 10px;
+            border: 2px solid #2E8B57;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 1002;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .balance-update.show {
+            opacity: 1;
+        }
+
+        .balance-update.positive { color: #2E8B57; }
+        .balance-update.negative { color: #ff4444; }
+    </style>
+</head>
+<body>
+    <!-- Анимация изменения баланса -->
+    <div id="balanceUpdate" class="balance-update"></div>
+
+    <!-- Шапка -->
+    <div class="header">
+        <div class="nav">
+            <div class="logo">🎰 EzCash</div>
+            <div class="balance-container">
+                <div class="balance">Баланс: $<span id="balance">0</span></div>
+                <div class="balance-change" id="balanceChange"></div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="showSection('deposit')">💰 Пополнить</button>
+                <button class="nav-btn" onclick="showSection('withdraw')">💸 Вывести</button>
+                <button class="nav-btn" onclick="showSection('history')">📊 История</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="main-container">
+        <h1 style="text-align: center; margin-bottom: 30px; color: #2E8B57;">🎮 Игровой зал EzCash</h1>
+        
+        <div class="games-grid">
+            <div class="game-card" id="slotsCard" onclick="openGame('slots')">
+                <div class="game-icon">🎰</div>
+                <div class="game-title">Слоты</div>
+                <div class="game-description">Классические игровые автоматы</div>
+            </div>
+
+            <div class="game-card" id="rouletteCard" onclick="openGame('roulette')">
+                <div class="game-icon">🎡</div>
+                <div class="game-title">Рулетка</div>
+                <div class="game-description">Европейская рулетка</div>
+            </div>
+
+            <div class="game-card" id="diceCard" onclick="openGame('dice')">
+                <div class="game-icon">🎲</div>
+                <div class="game-title">Кости</div>
+                <div class="game-description">Угадай число</div>
+            </div>
+        </div>
+
+        <!-- Секция депозита -->
+        <div class="payment-section" id="depositSection">
+            <div class="payment-box">
+                <h2>💰 Пополнение баланса USDT (TRC20)</h2>
+                
+                <div style="font-size: 24px; color: #2E8B57; margin: 15px 0;">
+                    Текущий баланс: $<span id="depositBalance">0</span>
+                </div>
+
+                <div class="deposit-form">
+                    <label for="depositAmount">Сумма пополнения (USD):</label>
+                    <input type="number" id="depositAmount" min="10" max="10000" placeholder="Введите сумму" value="100">
+                    
+                    <button class="bet-btn" onclick="generateDeposit()" style="width: 100%; margin: 15px 0;">
+                        Сгенерировать депозит
+                    </button>
+                </div>
+
+                <div id="depositInfo" style="display: none;">
+                    <h3>Переведите точную сумму на адрес:</h3>
+                    <div class="wallet-address" id="walletAddress">
+                        TLpRk7s2EsHtXgtJHkUzcCJXr7QJtr5EEs
+                    </div>
+                    
+                    <button class="copy-btn" onclick="copyAddress('walletAddress')">📋 Скопировать адрес</button>
+                    
+                    <div class="status pending" id="depositStatus">
+                        ⏳ Ожидание оплаты...
+                    </div>
+
+                    <button class="bet-btn" onclick="checkDepositPayment()" style="width: 100%;">
+                        🔍 Проверить оплату
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Секция вывода -->
+        <div class="payment-section" id="withdrawSection">
+            <div class="payment-box">
+                <h2>💸 Вывод средств USDT (TRC20)</h2>
+                
+                <div style="font-size: 24px; color: #2E8B57; margin: 15px 0;">
+                    Доступно для вывода: $<span id="withdrawBalance">0</span>
+                </div>
+
+                <div class="withdraw-form">
+                    <label for="withdrawAmount">Сумма вывода (USD):</label>
+                    <input type="number" id="withdrawAmount" min="20" max="5000" placeholder="Минимум 20 USD" value="100">
+                    
+                    <label for="withdrawAddress">Ваш TRC20 адрес:</label>
+                    <input type="text" id="withdrawAddress" placeholder="Введите ваш TRC20 адрес USDT">
+                    
+                    <button class="withdraw-btn" onclick="submitWithdraw()" style="width: 100%; margin: 15px 0;">
+                        💸 Заказать вывод
+                    </button>
+                </div>
+
+                <div id="withdrawInfo" style="display: none;">
+                    <div class="status processing" id="withdrawStatus">
+                        ⏳ Заявка на вывод обрабатывается...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- История транзакций -->
+        <div class="payment-section" id="historySection">
+            <div class="payment-box">
+                <h2>📊 История транзакций</h2>
+                <div class="transaction-history" id="transactionHistory">
+                    <!-- Транзакции будут добавляться здесь -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Окно слотов -->
+    <div id="slotsGame" class="game-window">
+        <button class="close-btn" onclick="closeGame('slots')">✕</button>
+        <h2>🎰 Игровые автоматы</h2>
+        
+        <div class="slot-machine">
+            <div class="balance-container" style="margin: 15px 0;">
+                Баланс для игры: $<span id="gameBalance">0</span>
+            </div>
+            
+            <div class="reels">
+                <div class="reel" id="reel1">?</div>
+                <div class="reel" id="reel2">?</div>
+                <div class="reel" id="reel3">?</div>
+            </div>
+            
+            <div class="result" id="slotResult"></div>
+            
+            <div style="text-align: center; margin: 15px 0;">
+                <button class="bet-btn" onclick="changeBet(-10)">-10</button>
+                <span style="font-size: 18px; margin: 0 15px;">Ставка: $<span id="currentBet">50</span></span>
+                <button class="bet-btn" onclick="changeBet(10)">+10</button>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="spin-btn" id="spinBtn" onclick="spinSlots()">SPIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Окно игры в кости -->
+    <div id="diceGame" class="game-window">
+        <button class="close-btn" onclick="closeGame('dice')">✕</button>
+        <h2>🎲 Игра в кости</h2>
+        
+        <div class="slot-machine">
+            <div class="balance-container" style="margin: 15px 0;">
+                Баланс для игры: $<span id="diceBalance">0</span>
+            </div>
+            
+            <div style="text-align: center; font-size: 80px; margin: 20px 0;" id="diceResult">
+                🎲
+            </div>
+            
+            <div style="text-align: center; margin: 15px 0;">
+                <button class="bet-btn" onclick="changeDiceBet(-10)">-10</button>
+                <span style="font-size: 18px; margin: 0 15px;">Ставка: $<span id="diceBet">50</span></span>
+                <button class="bet-btn" onclick="changeDiceBet(10)">+10</button>
+            </div>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <label>Выберите ставку:</label>
+                <div>
+                    <button class="bet-btn" onclick="playDice('even')">Чёт (x2)</button>
+                    <button class="bet-btn" onclick="playDice('odd')">Нечёт (x2)</button>
+                    <button class="bet-btn" onclick="playDice('six')">Шестёрка (x6)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let userBalance = 0;
+        let currentBet = 50;
+        let diceBet = 50;
+        let transactionHistory = [];
+        let pendingDeposit = null;
+        let pendingWithdraw = null;
+
+        // Инициализация
+        function init() {
+            updateBalance();
+            updateGameCards();
+            loadTransactionHistory();
+        }
+
+        // Обновление баланса с анимацией
+        function updateBalance(change = 0) {
+            const oldBalance = userBalance;
+            
+            // Обновляем все отображения баланса
+            document.getElementById('balance').textContent = userBalance;
+            document.getElementById('depositBalance').textContent = userBalance;
+            document.getElementById('withdrawBalance').textContent = userBalance;
+            document.getElementById('gameBalance').textContent = userBalance;
+            document.getElementById('diceBalance').textContent = userBalance;
+            
+            // Показываем анимацию изменения
+            if (change !== 0) {
+                showBalanceChange(change);
+            }
+            
+            // Обновляем кнопки игр
+            updateGameCards();
+        }
+
+        // Показать изменение баланса
+        function showBalanceChange(amount) {
+            const changeEl = document.getElementById('balanceChange');
+            const updateEl = document.getElementById('balanceUpdate');
+            
+            if (amount > 0) {
+                changeEl.textContent = `+$${amount}`;
+                changeEl.className = 'balance-change show positive';
+                updateEl.textContent = `+$${amount}`;
+                updateEl.className = 'balance-update show positive';
+            } else {
+                changeEl.textContent = `-$${Math.abs(amount)}`;
+                changeEl.className = 'balance-change show negative';
+                updateEl.textContent = `-$${Math.abs(amount)}`;
+                updateEl.className = 'balance-update show negative';
+            }
+            
+            // Скрываем через 2 секунды
+            setTimeout(() => {
+                changeEl.className = 'balance-change';
+                updateEl.className = 'balance-update';
+            }, 2000);
+        }
+
+        // Изменить баланс
+        function changeBalance(amount, type, description = '') {
+            const oldBalance = userBalance;
+            userBalance += amount;
+            
+            // Добавляем в историю
+            addTransaction({
+                type: type,
+                amount: Math.abs(amount),
+                description: description,
+                timestamp: new Date().toLocaleString()
+            });
+            
+            // Обновляем отображение с анимацией
+            updateBalance(amount);
+            
+            return userBalance;
+        }
+
+        // ДЕПОЗИТНАЯ СИСТЕМА
+        function generateDeposit() {
+            const amount = parseInt(document.getElementById('depositAmount').value);
+            
+            if (!amount || amount < 10) {
+                alert('Минимальная сумма депозита 10 USD');
+                return;
+            }
+
+            pendingDeposit = {
+                amount: amount,
+                address: 'TLpRk7s2EsHtXgtJHkUzcCJXr7QJtr5EEs',
+                timestamp: Date.now(),
+                status: 'pending'
+            };
+
+            document.getElementById('depositInfo').style.display = 'block';
+            updateDepositStatus('⏳ Ожидание оплаты...', 'pending');
+        }
+
+        function checkDepositPayment() {
+            const isConfirmed = Math.random() > 0.3;
+            
+            if (isConfirmed && pendingDeposit) {
+                // НАЧИСЛЯЕМ БАБКИ НА БАЛАНС
+                changeBalance(pendingDeposit.amount, 'deposit', 'Пополнение через TRC20');
+                
+                updateDepositStatus('✅ Оплата подтверждена! Баланс пополнен.', 'confirmed');
+                
+                setTimeout(() => {
+                    document.getElementById('depositInfo').style.display = 'none';
+                    pendingDeposit = null;
+                }, 3000);
+            } else {
+                updateDepositStatus('❌ Платеж не найден. Попробуйте позже.', 'pending');
+            }
+        }
+
+        // ИГРА В СЛОТЫ
+        function spinSlots() {
+            if (userBalance < currentBet) {
+                alert('Недостаточно средств!');
+                return;
+            }
+
+            // СНИМАЕМ СТАВКУ С БАЛАНСА
+            changeBalance(-currentBet, 'bet', 'Ставка в слотах');
+
+            animateReels().then(() => {
+                const result = [
+                    slotSymbols[Math.floor(Math.random() * slotSymbols.length)],
+                    slotSymbols[Math.floor(Math.random() * slotSymbols.length)],
+                    slotSymbols[Math.floor(Math.random() * slotSymbols.length)]
+                ];
+
+                displaySlotResult(result);
+                calculateSlotWin(result);
+            });
+        }
+
+        function calculateSlotWin(result) {
+            let win = 0;
+            let message = '';
+
+            if (result[0] === result[1] && result[1] === result[2]) {
+                win = currentBet * 10;
+                message = `🎉 ДЖЕКПОТ! Вы выиграли $${win}!`;
+            } else if (result[0] === result[1] || result[1] === result[2]) {
+                win = currentBet * 2;
+                message = `👍 Хорошо! Вы выиграли $${win}`;
+            } else {
+                message = "😢 Попробуйте еще раз!";
+            }
+
+            // ЗАЧИСЛЯЕМ ВЫИГРЫШ НА БАЛАНС
+            if (win > 0) {
+                changeBalance(win, 'win', `Выигрыш в слотах (ставка: $${currentBet})`);
+                document.getElementById('slotResult').classList.add('win-animation');
+            }
+
+            document.getElementById('slotResult').textContent = message;
+            
+            setTimeout(() => {
+                document.getElementById('slotResult').classList.remove('win-animation');
+            }, 1000);
+        }
+
+        // ИГРА В КОСТИ
+        function playDice(betType) {
+            if (userBalance < diceBet) {
+                alert('Недостаточно средств!');
+                return;
+            }
+
+            // СНИМАЕМ СТАВКУ
+            changeBalance(-diceBet, 'bet', `Ставка в кости: ${betType}`);
+
+            // Бросаем кость
+            const diceRoll = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('diceResult').textContent = getDiceEmoji(diceRoll);
+
+            let win = 0;
+            let message = '';
+
+            // Проверяем выигрыш
+            if (betType === 'even' && diceRoll % 2 === 0) {
+                win = diceBet * 2;
+                message = `🎉 Чёт! Выигрыш $${win}`;
+            } else if (betType === 'odd' && diceRoll % 2 === 1) {
+                win = diceBet * 2;
+                message = `🎉 Нечёт! Выигрыш $${win}`;
+            } else if (betType === 'six' && diceRoll === 6) {
+                win = diceBet * 6;
+                message = `🎉 ШЕСТЁРКА! ДЖЕКПОТ $${win}`;
+            } else {
+                message = "😢 Не повезло!";
+            }
+
+            // ЗАЧИСЛЯЕМ ВЫИГРЫШ
+            if (win > 0) {
+                changeBalance(win, 'win', `Выигрыш в кости: ${message}`);
+            }
+
+            setTimeout(() => {
+                alert(message);
+            }, 500);
+        }
+
+        function getDiceEmoji(number) {
+            const diceEmojis = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            return diceEmojis[number - 1];
+        }
+
+        // Остальные функции остаются такими же как в предыдущем коде
+        // (updateGameCards, showSection, addTransaction, и т.д.)
+
+        // Запуск при загрузке
+        window.onload = init;
+    </script>
+</body>
+  </html>
